@@ -53,31 +53,39 @@ class Tx_T3Less_Controller_LessPhpController extends Tx_T3Less_Controller_BaseCo
 		if ($this->configuration['other']['mergeFiles']) {
 			
 			// merge each less-file
-			$i=0; $file="";
+			$i=0; $mergedfiles="";
 			foreach( $files as $file) {
-				$fh = fopen($_SERVER["DOCUMENT_ROOT"] . $file, "r");
-				$file .= fread($fh, filesize($file));
+				$absfilepath = $_SERVER["DOCUMENT_ROOT"] . $file;
+				$fh = fopen($absfilepath, "r");
+				$mergedfiles .= fread($fh, filesize($absfilepath));
 				fclose($fh);
 			}
-			//get only the name of less file
 			
 			$firstFile = array_pop( $files );
+			
+			//get only the name of less file		
 			$filename = array_pop( explode( '/', $firstFile ) );
 
 			$md5 = md5( $filename . md5_file( $firstFile ) );
 
-			$outputfile = $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css';
+			
+			// keine ahnung warum hier das merged- nicht ist im filename
+			$outputfile = $this->outputfolder . 'merged-' . substr( $filename, 0, -5 ) . '_' . $md5 . '.css';
 
 			if( $this->configuration['other']['forceMode'] ) {
 				unlink( $outputfile );
 			}
 
-			if( !file_exists( $outputfile ) ) {
-				if( $this->configuration['other']['compressed'] ) {
+			if( !file_exists( $outputfile ) )
+			{
+				if( $this->configuration['other']['compressed'] )
+				{
 					$less->setFormatter( "compressed" );
-					lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css', $less );
-				} else {
-					lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css' );
+					lessc::ccompile( $file, $outputfile, $less );
+				}
+				else
+				{
+					lessc::ccompile( $file, $outputfile );
 				}
 				t3lib_div::fixPermissions( $outputfile, FALSE );
 			}
@@ -85,7 +93,8 @@ class Tx_T3Less_Controller_LessPhpController extends Tx_T3Less_Controller_BaseCo
 		} else {
 			
 			// compile each less-file
-			foreach( $files as $file ) {
+			foreach( $files as $file )
+			{
 				//get only the name of less file
 				$filename = array_pop( explode( '/', $file ) );
 	
@@ -93,16 +102,21 @@ class Tx_T3Less_Controller_LessPhpController extends Tx_T3Less_Controller_BaseCo
 	
 				$outputfile = $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css';
 	
-				if( $this->configuration['other']['forceMode'] ) {
+				if( $this->configuration['other']['forceMode'] )
+				{
 					unlink( $outputfile );
 				}
 	
-				if( !file_exists( $outputfile ) ) {
-					if( $this->configuration['other']['compressed'] ) 	{
+				if( !file_exists( $outputfile ) )
+				{
+					if( $this->configuration['other']['compressed'] )
+					{
 						$less->setFormatter( "compressed" );
-						lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css', $less );
-					} else {
-						lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css' );
+						lessc::ccompile( $file, $outputfile, $less );
+					}
+					else
+					{
+						lessc::ccompile( $file, $outputfile );
 					}
 					t3lib_div::fixPermissions( $outputfile, FALSE );
 				}
