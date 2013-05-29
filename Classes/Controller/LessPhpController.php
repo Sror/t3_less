@@ -42,8 +42,7 @@ class Tx_T3Less_Controller_LessPhpController extends Tx_T3Less_Controller_BaseCo
 	public function lessPhp( $files )
 	{
 		// create outputfolder if it does not exist
-		if( !is_dir( $this->outputfolder ) )
-		{
+		if( !is_dir( $this->outputfolder ) ) {
 			t3lib_div::mkdir_deep( '', $this->outputfolder );
 		}
 
@@ -51,33 +50,62 @@ class Tx_T3Less_Controller_LessPhpController extends Tx_T3Less_Controller_BaseCo
 		$this->checkForAdditionalConfiguration( $less );
 
 
-		// compile each less-file
-		foreach( $files as $file )
-		{
+		if ($this->configuration['other']['mergeFiles']) {
+			
+			// merge each less-file
+			$i=0; $file="";
+			foreach( $files as $file) {
+				$fh = fopen($_SERVER["DOCUMENT_ROOT"] . $file, "r");
+				$file .= fread($fh, filesize($file));
+				fclose($fh);
+			}
 			//get only the name of less file
-			$filename = array_pop( explode( '/', $file ) );
+			
+			$firstFile = array_pop( $files );
+			$filename = array_pop( explode( '/', $firstFile ) );
 
-			$md5 = md5( $filename . md5_file( $file ) );
+			$md5 = md5( $filename . md5_file( $firstFile ) );
 
 			$outputfile = $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css';
 
-			if( $this->configuration['other']['forceMode'] )
-			{
+			if( $this->configuration['other']['forceMode'] ) {
 				unlink( $outputfile );
 			}
 
-			if( !file_exists( $outputfile ) )
-			{
-				if( $this->configuration['other']['compressed'] )
-				{
+			if( !file_exists( $outputfile ) ) {
+				if( $this->configuration['other']['compressed'] ) {
 					$less->setFormatter( "compressed" );
 					lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css', $less );
-				}
-				else
-				{
+				} else {
 					lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css' );
 				}
 				t3lib_div::fixPermissions( $outputfile, FALSE );
+			}
+			
+		} else {
+			
+			// compile each less-file
+			foreach( $files as $file ) {
+				//get only the name of less file
+				$filename = array_pop( explode( '/', $file ) );
+	
+				$md5 = md5( $filename . md5_file( $file ) );
+	
+				$outputfile = $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css';
+	
+				if( $this->configuration['other']['forceMode'] ) {
+					unlink( $outputfile );
+				}
+	
+				if( !file_exists( $outputfile ) ) {
+					if( $this->configuration['other']['compressed'] ) 	{
+						$less->setFormatter( "compressed" );
+						lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css', $less );
+					} else {
+						lessc::ccompile( $file, $this->outputfolder . substr( $filename, 0, -5 ) . '_' . $md5 . '.css' );
+					}
+					t3lib_div::fixPermissions( $outputfile, FALSE );
+				}
 			}
 		}
 
